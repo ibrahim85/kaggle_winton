@@ -7,8 +7,8 @@ from sklearn.ensemble import ExtraTreesRegressor
 
 
 # import the training data as a "data frame"
-train = pd.read_csv("/home/prinjoh/Kaggle/train.csv")
-test  = pd.read_csv("/home/prinjoh/Kaggle/test.csv")
+train = pd.read_csv("./data/train.csv")
+test  = pd.read_csv("./data/test.csv")
 
 # heatmap of correlations
 feature_corr = train.ix[:,'Feature_1':'Feature_25'].corr()
@@ -50,13 +50,14 @@ extra = ExtraTreesRegressor(n_estimators=100, criterion='mse', max_depth=None, m
 extra = extra.fit(X,Y)
 
 # define success
-def wmae(extra,X,Y,W):
+def wmae(extra,X,Y):
     ''' Submissions are evaluated using the Weighted Mean Absolute Error. Each return you predicted is compared with the actual return.
     The formula is then:
     WMAE=(1/n)*∑_i{w_i⋅|y_i−yhat_i|}
     where wi is the weight associated with the return (Weight_Intraday, Weight_Daily for intraday and daily returns),
     yhat_i is the ith predicted return, y_i is the ith actual return, n is the number of predictions.
     '''
+    global W
     Yhat = extra.predict(X)
     n = len(Y)
     if ((len(Yhat)!=n) or (len(W)!=n)):
@@ -66,7 +67,7 @@ def wmae(extra,X,Y,W):
 
 # Measure success:
 # Do cross-validation to see how well our method is working
-# !! note - i dont know how to pass W to wmae yet !!
+# !! note - i made W global in wmae !!
 # use Winton's scoring function
 # use all available CPUs (n_jobs=-1)
 W = train['Weight_Intraday':'Weight_Daily']
