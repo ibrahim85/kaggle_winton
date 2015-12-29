@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def fcs(data,fitmethod):
+def predict(data,fitmethod):
     """ fitmethod can be 'ols' or 'extra' (for extremely randomized forest) """
 
     import multiprocessing as mp
@@ -32,7 +32,7 @@ def fcs(data,fitmethod):
     return data_updated, scores
 
 
-def fcsOneColumn(data,fitmethod,yindex):
+def predictOneColumn(data,fitmethod,yindex):
     """forecast one variable using the others"""
     # yindex is the column to forecast using the other columns
 

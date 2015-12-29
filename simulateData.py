@@ -17,7 +17,7 @@ def simulateData(nObs, nFeatures):
     V = np.outer(v, v)
     cov = V * C
     # randomly generate nFeatures
-    mu = np.random.rand(nFeatures, ) * 2. - 1.
+    mu = np.random.rand(nFeatures,) * 2. - 1.
     # randomly generate data
     simulated_data = np.random.multivariate_normal(mu, cov, nObs)
     return simulated_data
