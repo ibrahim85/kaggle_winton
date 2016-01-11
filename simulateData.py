@@ -1,25 +1,33 @@
-def simulateData(nObs, nFeatures):
+def simulateData(nObs, nFeatures, method='ols'):
     """ generate random data from multivariate normal distribution """
     import numpy as np
+    from sklearn.datasets import make_blobs
 
-    # randomly generate correlation matrix for the distribution. All correlations must
-    # be between -1 and 1. 'random' uses the uniform distribution.
-    C = np.random.random((nFeatures, nFeatures)) * 2. - 1.
-    for i in range(nFeatures):
-        C[i, i] = 1.
-    # ensure symmetry
-    C = (C + C.T) / 2.
-    # randomly generate volatilities. All volatilities must be positive.
-    v = np.random.rand(nFeatures, 1) * 10.
-    # covariance matrix. Convolve volatilites and correlations. (v*v').*(C)
-    V = np.dot(v, v.T)
-    # alternative way:
-    V = np.outer(v, v)
-    cov = V * C
-    # randomly generate nFeatures
-    mu = np.random.rand(nFeatures,) * 2. - 1.
-    # randomly generate data
-    simulated_data = np.random.multivariate_normal(mu, cov, nObs)
+    if method == 'ols':
+        # randomly generate correlation matrix for the distribution. All correlations must
+        # be between -1 and 1. 'random' uses the uniform distribution.
+        C = np.random.random((nFeatures, nFeatures)) * 2. - 1.
+        for i in range(nFeatures):
+            C[i, i] = 1.
+        # ensure symmetry
+        C = (C + C.T) / 2.
+        # randomly generate volatilities. All volatilities must be positive.
+        v = np.random.rand(nFeatures, 1) * 10.
+        # covariance matrix. Convolve volatilites and correlations. (v*v').*(C)
+        V = np.dot(v, v.T)
+        # alternative way:
+        V = np.outer(v, v)
+        cov = V * C
+        # randomly generate nFeatures
+        mu = np.random.rand(nFeatures,) * 2. - 1.
+        # randomly generate data
+        simulated_data = np.random.multivariate_normal(mu, cov, nObs)
+    elif method == 'blobs':
+        simulated_data, y = make_blobs(n_samples=nObs, n_features=nFeatures,
+                                       centers=max(3, nFeatures / 10.),
+                                       random_state=0)
+    else:
+        raise Exception('method must be ols or blobs')
     return simulated_data
 
 

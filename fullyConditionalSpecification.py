@@ -15,33 +15,35 @@ def predict(data,fitmethod):
     pool = mp.Pool(processes=min(nFeatures, mp.cpu_count()))
 
     # give the same dataset to each processor, but indexing a different column to forecast
-    pooledResults = pool.map(partial(fcsOneColumn, data, fitmethod), range(nFeatures))
-    forecastedDataList = [pooledResult[0] for pooledResult in pooledResults]
-    scores = [pooledResult[1] for pooledResult in pooledResults]
-
-    # do some cleanup (what does join do?)
+    pooledResults = pool.map(partial(predictOneColumn, data, fitmethod), range(nFeatures))
     pool.close()
     pool.join()
 
-    # update the dataset's missing values with the forecasts
-    data_updated = np.copy(data)
-    for f in range(nFeatures):
-        nidx_f = np.isnan(data[:, f])
-        data_updated[nidx_f, f] = forecastedDataList[f][nidx_f]
+    # extract and format the pooled results
+    forecastedDataList = [pooledResult[0] for pooledResult in pooledResults]
+    data_forecasted = np.column_stack(forecastedDataList)
+    scores = [pooledResult[1] for pooledResult in pooledResults]
 
-    return data_updated, scores
+    # return forecasts for the entire dataset
+    # the calling program will use this to update data that were originally NaN
+    # (which this function can't see)
+    return data_forecasted, scores
 
 
 def predictOneColumn(data,fitmethod,yindex):
     """forecast one variable using the others"""
     # yindex is the column to forecast using the other columns
 
-    from sklearn import linear_model, cross_validation
+    from sklearn import linear_model, cross_validation, ensemble
 
     # we can implement as many fit methods as we like
     # next up: ExtraTreesRegressor
-    fitmethods = {'ols':linear_model.LinearRegression(fit_intercept=True, normalize=False, copy_X=True),
-                  'sgd':linear_model.SGDRegressor(fit_intercept=True)}
+    fitmethods = dict(ols=linear_model.LinearRegression(fit_intercept=True, normalize=False, copy_X=True),
+                      extra=ensemble.ExtraTreesRegressor(n_estimators=100, criterion='mse', max_depth=None,
+                                                         min_samples_split=2, min_samples_leaf=1,
+                                                         min_weight_fraction_leaf=0.0, max_features='auto',
+                                                         max_leaf_nodes=None, bootstrap=False, oob_score=False,
+                                                         n_jobs=1))
 
     # X is every column except the column specified by yindex
     ncols = data.shape[1]
